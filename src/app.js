@@ -2,7 +2,7 @@ const express = require('express');
 const { createDb } = require('./db');
 const { targetsRepo } = require('./targetsRepo');
 const { targetsRouter } = require('./routes/targets');
-
+const { resultsRepo } = require('./resultsRepo');
 // db is passed in so tests can use a fresh in-memory database
 function createApp({ db = createDb() } = {}) {
   const app = express();
@@ -14,7 +14,15 @@ function createApp({ db = createDb() } = {}) {
 
   app.use('/targets', targetsRouter(targetsRepo(db)));
 
+  // Latest check results for one target
+  const results = resultsRepo(db);
+  app.get('/targets/:id/results', (req, res) => {
+    res.json(results.latest(Number(req.params.id), 20));
+  });
+
   return app;
+
+  
 }
 
 module.exports = { createApp };
