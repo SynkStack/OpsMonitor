@@ -6,13 +6,19 @@ const { resultsRepo } = require('./resultsRepo');
 const { incidentsRepo } = require('./incidentsRepo');
 const { incidentsRouter } = require('./routes/incidents');
 const { statsRouter } = require('./routes/stats');
+const { createMetrics } = require('./metrics');
 // db is passed in so tests can use a fresh in-memory database
-function createApp({ db = createDb() } = {}) {
+function createApp({ db = createDb(), metrics = createMetrics(db) } = {}) {
   const app = express();
   app.use(express.json());
 
   app.get('/health', (req, res) => {
     res.json({ status: 'ok', uptime_sec: Math.floor(process.uptime()) });
+  });
+    // Prometheus scrapes this URL
+  app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', metrics.registry.contentType);
+    res.send(await metrics.registry.metrics());
   });
 
   app.use('/targets', targetsRouter(targetsRepo(db)));
