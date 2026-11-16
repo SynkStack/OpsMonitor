@@ -1,0 +1,29 @@
+services:
+  monitor:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_FILE=/data/opsmonitor.db
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL:-}
+    volumes:
+      - monitor-data:/data
+    depends_on:
+      - fake-target
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Same image, different command: the service we switch up and down
+  fake-target:
+    build: .
+    command: ["node", "fake-target/server.js"]
+    environment:
+      - PORT=4000
+    ports:
+      - "4000:4000"
+
+volumes:
+  monitor-data:
