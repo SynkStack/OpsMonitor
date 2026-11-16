@@ -41,3 +41,7 @@ Every second the scheduler starts a check for each active target that is due. A 
 - 3 consecutive failed checks open one incident; the first successful check closes it
 - `GET /incidents` lists incidents, `GET /incidents?open=true` lists open ones
 - Alerts go to `ALERT_WEBHOOK_URL` if set, otherwise they are logged to the console
+
+## Stats and metrics
+- `GET /targets/:id/stats?hours=24`: uptime %, average latency and last status (`degraded` counts as available)
+- `GET /metrics`: Prometheus format: `opsmonitor_checks_total`, `opsmonitor_check_latency_ms`, `opsmonitor_target_up`, `opsmonitor_open_incidents`
