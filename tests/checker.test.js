@@ -25,3 +25,13 @@ test('network error is down with no http code', async () => {
   expect(r.status).toBe('down');
   expect(r.httpCode).toBeNull();
 });
+
+test('request slower than timeout is down with timeout error', async () => {
+  // Fake fetch that never answers, only rejects when aborted
+  mockFetch((url, { signal }) => new Promise((_, reject) => {
+    signal.addEventListener('abort', () => reject(new Error('aborted')));
+  }));
+  const r = await checkTarget('http://x', { timeoutMs: 50 });
+  expect(r.status).toBe('down');
+  expect(r.error).toBe('timeout');
+});
