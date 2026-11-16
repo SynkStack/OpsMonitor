@@ -1,15 +1,16 @@
-// Checks one URL and returns { status, latencyMs, httpCode, error? }
-async function checkTarget(url) {
+async function checkTarget(url, { timeoutMs = 5000 } = {}) {
   const start = Date.now();
+  const controller = new AbortController();
+  // After timeoutMs, cancel the request
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: controller.signal });
     const latencyMs = Date.now() - start;
-    // res.ok is true for any 2xx code
     return { status: res.ok ? 'up' : 'down', latencyMs, httpCode: res.status };
   } catch (err) {
-    // Network error (DNS failure, connection refused...)
-    return { status: 'down', latencyMs: Date.now() - start, httpCode: null, error: err.message };
+    const error = controller.signal.aborted ? 'timeout' : err.message;
+    return { status: 'down', latencyMs: Date.now() - start, httpCode: null, error };
+  } finally {
+    clearTimeout(timer); // always stop the timer
   }
 }
-
-module.exports = { checkTarget };
