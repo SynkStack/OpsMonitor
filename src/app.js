@@ -3,6 +3,8 @@ const { createDb } = require('./db');
 const { targetsRepo } = require('./targetsRepo');
 const { targetsRouter } = require('./routes/targets');
 const { resultsRepo } = require('./resultsRepo');
+const { incidentsRepo } = require('./incidentsRepo');
+const { incidentsRouter } = require('./routes/incidents');
 // db is passed in so tests can use a fresh in-memory database
 function createApp({ db = createDb() } = {}) {
   const app = express();
@@ -19,7 +21,7 @@ function createApp({ db = createDb() } = {}) {
   app.get('/targets/:id/results', (req, res) => {
     res.json(results.latest(Number(req.params.id), 20));
   });
-
+  app.use('/incidents', incidentsRouter(incidentsRepo(db)));
   return app;
 
   

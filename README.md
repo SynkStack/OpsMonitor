@@ -29,4 +29,15 @@ Copy `.env.example` to `.env` to configure `PORT` and `DB_FILE`.
 | GET | `/health` | Monitor liveness |
 
 ## Scheduler
-Every second the
+Every second the scheduler starts a check for each active target that is due. A target never has two checks running at the same time.
+
+## Fake target
+`npm run start:fake` starts a test service on :4000:
+- `POST /admin/down` makes it return 500
+- `POST /admin/up` makes it healthy again
+- `POST /admin/slow/:ms` adds delay to simulate degraded
+
+## Incidents and alerts
+- 3 consecutive failed checks open one incident; the first successful check closes it
+- `GET /incidents` lists incidents, `GET /incidents?open=true` lists open ones
+- Alerts go to `ALERT_WEBHOOK_URL` if set, otherwise they are logged to the console
