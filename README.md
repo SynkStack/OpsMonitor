@@ -45,3 +45,7 @@ Every second the scheduler starts a check for each active target that is due. A 
 ## Stats and metrics
 - `GET /targets/:id/stats?hours=24`: uptime %, average latency and last status (`degraded` counts as available)
 - `GET /metrics`: Prometheus format: `opsmonitor_checks_total`, `opsmonitor_check_latency_ms`, `opsmonitor_target_up`, `opsmonitor_open_incidents`
+
+## Docker
+`docker compose up --build` starts the monitor on :3000 and the fake target on :4000.
+Register targets with `http://fake-target:4000/health`. Data is kept in a volume.
