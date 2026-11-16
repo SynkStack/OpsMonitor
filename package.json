@@ -5,7 +5,9 @@
   "scripts": {
     "start": "node src/server.js",
     "start:fake": "node fake-target/server.js",
-    "test": "jest"
+    "test": "jest",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
   },
   "keywords": [],
   "author": "",
