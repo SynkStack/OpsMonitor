@@ -35,3 +35,9 @@ test('request slower than timeout is down with timeout error', async () => {
   expect(r.status).toBe('down');
   expect(r.error).toBe('timeout');
 });
+
+test('slow 2xx response is degraded', async () => {
+  mockFetch(() => new Promise((resolve) => setTimeout(() => resolve({ ok: true, status: 200 }), 30)));
+  const r = await checkTarget('http://x', { degradedMs: 10 });
+  expect(r.status).toBe('degraded');
+});
