@@ -1,4 +1,4 @@
-async function checkTarget(url, { timeoutMs = 5000 } = {}) {
+async function checkTarget(url, { timeoutMs = 5000, degradedMs = 1000 } = {}) {
   const start = Date.now();
   const controller = new AbortController();
   // After timeoutMs, cancel the request
@@ -6,7 +6,9 @@ async function checkTarget(url, { timeoutMs = 5000 } = {}) {
   try {
     const res = await fetch(url, { signal: controller.signal });
     const latencyMs = Date.now() - start;
-    return { status: res.ok ? 'up' : 'down', latencyMs, httpCode: res.status };
+        // 2xx but slow = degraded
+    const status = !res.ok ? 'down' : latencyMs > degradedMs ? 'degraded' : 'up';
+    return { status, latencyMs, httpCode: res.status };
   } catch (err) {
     const error = controller.signal.aborted ? 'timeout' : err.message;
     return { status: 'down', latencyMs: Date.now() - start, httpCode: null, error };
@@ -14,3 +16,5 @@ async function checkTarget(url, { timeoutMs = 5000 } = {}) {
     clearTimeout(timer); // always stop the timer
   }
 }
+
+module.exports = { checkTarget }
