@@ -1,0 +1,43 @@
+const { checkTarget } = require('../src/checker');
+
+afterEach(() => jest.restoreAllMocks());
+
+// Helper: replace global fetch with a fake
+const mockFetch = (impl) => jest.spyOn(global, 'fetch').mockImplementation(impl);
+
+test('2xx response is up', async () => {
+  mockFetch(async () => ({ ok: true, status: 200 }));
+  const r = await checkTarget('http://x');
+  expect(r.status).toBe('up');
+  expect(r.httpCode).toBe(200);
+});
+
+test('500 response is down', async () => {
+  mockFetch(async () => ({ ok: false, status: 500 }));
+  const r = await checkTarget('http://x');
+  expect(r.status).toBe('down');
+  expect(r.httpCode).toBe(500);
+});
+
+test('network error is down with no http code', async () => {
+  mockFetch(async () => { throw new Error('ECONNREFUSED'); });
+  const r = await checkTarget('http://x');
+  expect(r.status).toBe('down');
+  expect(r.httpCode).toBeNull();
+});
+
+test('request slower than timeout is down with timeout error', async () => {
+  // Fake fetch that never answers, only rejects when aborted
+  mockFetch((url, { signal }) => new Promise((_, reject) => {
+    signal.addEventListener('abort', () => reject(new Error('aborted')));
+  }));
+  const r = await checkTarget('http://x', { timeoutMs: 50 });
+  expect(r.status).toBe('down');
+  expect(r.error).toBe('timeout');
+});
+
+test('slow 2xx response is degraded', async () => {
+  mockFetch(() => new Promise((resolve) => setTimeout(() => resolve({ ok: true, status: 200 }), 30)));
+  const r = await checkTarget('http://x', { degradedMs: 10 });
+  expect(r.status).toBe('degraded');
+});
